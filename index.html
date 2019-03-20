@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="apple-touch-icon" href="launch.png">
+  <link rel="apple-touch-startup-image" href="launch.png">
+  <meta name="apple-mobile-web-app-title" content="Push To Telescope">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <style>
+    body {
+      background-color: black;
+      color: red;
+      font-family: verdana;
+      font-size: 120%;
+    }
+
+    .button {
+      background-color: black;
+      color: red;
+      font-family: verdana;
+      font-size: 7vw;
+      border: 1px solid red;
+      padding: 2% 2%;
+      text-align: left;
+    }
+  </style>
+
+  <script>
+    function ready() {
+window.onload = init;
+var context;
+var bufferLoader;
+
+function init() {
+  // Fix up prefixing
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  context = new AudioContext();
+
+  bufferLoader = new BufferLoader(
+    context,
+    [
+      '../sounds/hyper-reality/br-jam-loop.wav',
+      '../sounds/hyper-reality/laughter.wav',
+    ],
+    finishedLoading
+    );
+
+  bufferLoader.load();
+}
+
+function finishedLoading(bufferList) {
+  // Create two sources and play them both together.
+  var source1 = context.createBufferSource();
+  var source2 = context.createBufferSource();
+  source1.buffer = bufferList[0];
+  source2.buffer = bufferList[1];
+
+  source1.connect(context.destination);
+  source2.connect(context.destination);
+  source1.start(0);
+  source2.start(0);
+}
+
+    }
+
+    if (document.readyState == 'loading') {
+      document.addEventListener('DOMContentLoaded', ready);
+    } else {
+      ready();
+    }
+  </script>
+
+</head>
+
+<body>
+  <div>
+
+    <button id="whiteNoise" class="buttonGroup8">white noise</button>
+    <button id="bit6" class="buttonGroup8">0</button>
+    <button id="bit5" class="buttonGroup8">0</button>
+    <button id="bit4" class="buttonGroup8">0</button>
+    <button id="bit3" class="buttonGroup8">0</button>
+    <button id="bit2" class="buttonGroup8">0</button>
+    <button id="bit1" class="buttonGroup8">0</button>
+    <button id="bit0" class="buttonGroup8">0</button>
+  </div>
+
+</body>
+
+</html>
