@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="apple-touch-icon" href="launch.png">
+  <link rel="apple-touch-startup-image" href="launch.png">
+  <meta name="apple-mobile-web-app-title" content="Push To Telescope">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <style>
+    body {
+      background-color: black;
+      color: red;
+      font-family: verdana;
+      font-size: 120%;
+    }
+
+    .button {
+      background-color: black;
+      color: red;
+      font-family: verdana;
+      font-size: 7vw;
+      border: 1px solid red;
+      padding: 2% 2%;
+      text-align: left;
+    }
+  </style>
+
+  <script>
+    function ready() {
+
+      var n = 0; //byte to send
+      //console.log("ready")
+      b0=document.getElementById("whiteNoise")
+      b0.addEventListener("click", () => {
+       // if (b0.innerHTML=="0") {b0.innerHTML="1";setBit(0,1)} else {{b0.innerHTML="0";setBit(0,0)}}
+       whiteNoise();
+      });
+      b1=document.getElementById("bit1")
+      b1.addEventListener("click", () => {
+        if (b1.innerHTML=="0") {b1.innerHTML="1";setBit(1,1)} else {{b1.innerHTML="0";setBit(1,0)}}
+      });
+      b2=document.getElementById("bit2")
+      b2.addEventListener("click", () => {
+        if (b2.innerHTML=="0") {b2.innerHTML="1";setBit(2,1)} else {{b2.innerHTML="0";setBit(2,0)}}
+      });
+      b3=document.getElementById("bit3")
+      b3.addEventListener("click", () => {
+        if (b3.innerHTML=="0") {b3.innerHTML="1";setBit(3,1)} else {{b3.innerHTML="0";setBit(3,0)}}
+      });
+      b4=document.getElementById("bit4")
+      b4.addEventListener("click", () => {
+        if (b4.innerHTML=="0") {b4.innerHTML="1";setBit(4,1)} else {{b4.innerHTML="0";setBit(4,0)}}
+      });
+      b5=document.getElementById("bit5")
+      b5.addEventListener("click", () => {
+        if (b5.innerHTML=="0") {b5.innerHTML="1";setBit(5,1)} else {{b5.innerHTML="0";setBit(5,0)}}
+      });
+      b6=document.getElementById("bit6")
+      b6.addEventListener("click", () => {
+        if (b6.innerHTML=="0") {b6.innerHTML="1";setBit(6,1)} else {{b6.innerHTML="0";setBit(6,0)}}
+      });
+      b7=document.getElementById("bit7")
+      b7.addEventListener("click", () => {
+        if (b7.innerHTML=="0") {b7.innerHTML="1";setBit(7,1)} else {{b7.innerHTML="0";setBit(7,0)}}
+      });
+
+
+      setBit = (b,s) => { //toogles the bit
+        var mask = 1 << b;
+        (s==1)? n ^= mask : n &= ~mask ;
+        
+        console.log(n.toString(2));
+        playData(n);
+      }
+
+      setUpDone = false;
+      timeScale = 1000
+      startPulseTime = 2.4 / timeScale
+      logic1PulseTime = 1.2 / timeScale
+      logic0PulseTime = 0.6 / timeScale
+      pulseSeparatorTime = 0.6 / timeScale
+      byte = 0
+
+      setUp = () => {
+        setUpDone = true;
+        if ('webkitAudioContext' in window)
+          audioCtx = new webkitAudioContext()
+        else
+          audioCtx = new AudioContext()
+
+        oscillator = audioCtx.createOscillator()
+        oscillator.frequency.value = 440; //19000
+
+        oscillatorR = audioCtx.createOscillator()
+        oscillatorR.frequency.value = 440; //19000
+
+        if ('webkitAudioContext' in window) {
+          gainNode = audioCtx.createGainNode()
+          gainNodeR = audioCtx.createGainNode()
+        } else {
+          gainNode = audioCtx.createGain()
+          gainNodeR = audioCtx.createGain()
+        }
+
+        if ('webkitAudioContext' in window) {
+          oscillator.noteOn(0)
+          oscillatorR.noteOn(0)
+        } else {
+
+          t = audioCtx.currentTime
+          oscillator.start(t)
+          oscillatorR.start(t + 0.00002632)
+
+          oscillator.connect(gainNode)
+          oscillatorR.connect(gainNodeR)
+          merger = audioCtx.createChannelMerger(2)
+
+          gainNode.connect(merger, 0, 0)
+          gainNodeR.connect(merger, 0, 1)
+
+          merger.connect(audioCtx.destination)
+
+          t = audioCtx.currentTime
+        }
+      }
+    }
+
+    playPulse = (pulseTime) => {
+      t += pulseSeparatorTime
+      gainNode.gain.setValueAtTime(1.0, t)
+      gainNodeR.gain.setValueAtTime(1.0, t)
+      t += pulseTime
+      gainNode.gain.setValueAtTime(0.0, t)
+      gainNodeR.gain.setValueAtTime(0.0, t)
+    }
+
+    playData = (byte) => {
+      if (!setUpDone) {
+        setUp();
+      }
+
+      //byte = 35;
+      bitSequence = (byte).toString(2) // convert number to a binary string
+      bitSequence = bitSequence.split("").reverse().join("").toString() // reverse data bits - lowest first
+      bitSequence += "00000000".substr(0, 7 - bitSequence.length) // add 0  to make 7 data bits
+      bitSequence += "10000"; //add 5 device bits // alert bitSequence
+      t = audioCtx.currentTime
+      playPulse(startPulseTime)
+      for (bit in bitSequence) {
+        if (bit == "1") {
+          playPulse(logic1PulseTime)
+        } else {
+          playPulse(logic0PulseTime)
+        }
+      }
+
+whiteNoise=()=> {console.log("white noise");
+
+
+    }
+
+    if (document.readyState == 'loading') {
+      document.addEventListener('DOMContentLoaded', ready);
+    } else {
+      ready();
+    }
+  </script>
+
+</head>
+
+<body>
+  <div>
+
+    <button id="whiteNoise" class="buttonGroup8">white noise</button>
+    <button id="bit6" class="buttonGroup8">0</button>
+    <button id="bit5" class="buttonGroup8">0</button>
+    <button id="bit4" class="buttonGroup8">0</button>
+    <button id="bit3" class="buttonGroup8">0</button>
+    <button id="bit2" class="buttonGroup8">0</button>
+    <button id="bit1" class="buttonGroup8">0</button>
+    <button id="bit0" class="buttonGroup8">0</button>
+  </div>
+
+</body>
+
+</html>
