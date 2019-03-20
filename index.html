@@ -34,11 +34,11 @@
   <script>
     function ready() {
 
-      var n = 0; //byte to send
+
       //console.log("ready")
       b0=document.getElementById("whiteNoise")
-      b0.addEventListener("click", () => {
-       // if (b0.innerHTML=="0") {b0.innerHTML="1";setBit(0,1)} else {{b0.innerHTML="0";setBit(0,0)}}
+      document.getElementById("whiteNoise").addEventListener("click", () => {
+   
        whiteNoise();
       });
       b1=document.getElementById("bit1")
@@ -69,98 +69,41 @@
       b7.addEventListener("click", () => {
         if (b7.innerHTML=="0") {b7.innerHTML="1";setBit(7,1)} else {{b7.innerHTML="0";setBit(7,0)}}
       });
+      
+      window.onload = init;
+var context;
+var bufferLoader;
 
+function init() {
+  // Fix up prefixing
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  context = new AudioContext();
 
-      setBit = (b,s) => { //toogles the bit
-        var mask = 1 << b;
-        (s==1)? n ^= mask : n &= ~mask ;
-        
-        console.log(n.toString(2));
-        playData(n);
-      }
+  bufferLoader = new BufferLoader(
+    context,
+    [
+      '../sounds/hyper-reality/br-jam-loop.wav',
+      '../sounds/hyper-reality/laughter.wav',
+    ],
+    finishedLoading
+    );
 
-      setUpDone = false;
-      timeScale = 1000
-      startPulseTime = 2.4 / timeScale
-      logic1PulseTime = 1.2 / timeScale
-      logic0PulseTime = 0.6 / timeScale
-      pulseSeparatorTime = 0.6 / timeScale
-      byte = 0
+  bufferLoader.load();
+}
 
-      setUp = () => {
-        setUpDone = true;
-        if ('webkitAudioContext' in window)
-          audioCtx = new webkitAudioContext()
-        else
-          audioCtx = new AudioContext()
+function finishedLoading(bufferList) {
+  // Create two sources and play them both together.
+  var source1 = context.createBufferSource();
+  var source2 = context.createBufferSource();
+  source1.buffer = bufferList[0];
+  source2.buffer = bufferList[1];
 
-        oscillator = audioCtx.createOscillator()
-        oscillator.frequency.value = 440; //19000
+  source1.connect(context.destination);
+  source2.connect(context.destination);
+  source1.start(0);
+  source2.start(0);
+}
 
-        oscillatorR = audioCtx.createOscillator()
-        oscillatorR.frequency.value = 440; //19000
-
-        if ('webkitAudioContext' in window) {
-          gainNode = audioCtx.createGainNode()
-          gainNodeR = audioCtx.createGainNode()
-        } else {
-          gainNode = audioCtx.createGain()
-          gainNodeR = audioCtx.createGain()
-        }
-
-        if ('webkitAudioContext' in window) {
-          oscillator.noteOn(0)
-          oscillatorR.noteOn(0)
-        } else {
-
-          t = audioCtx.currentTime
-          oscillator.start(t)
-          oscillatorR.start(t + 0.00002632)
-
-          oscillator.connect(gainNode)
-          oscillatorR.connect(gainNodeR)
-          merger = audioCtx.createChannelMerger(2)
-
-          gainNode.connect(merger, 0, 0)
-          gainNodeR.connect(merger, 0, 1)
-
-          merger.connect(audioCtx.destination)
-
-          t = audioCtx.currentTime
-        }
-      }
-    }
-
-    playPulse = (pulseTime) => {
-      t += pulseSeparatorTime
-      gainNode.gain.setValueAtTime(1.0, t)
-      gainNodeR.gain.setValueAtTime(1.0, t)
-      t += pulseTime
-      gainNode.gain.setValueAtTime(0.0, t)
-      gainNodeR.gain.setValueAtTime(0.0, t)
-    }
-
-    playData = (byte) => {
-      if (!setUpDone) {
-        setUp();
-      }
-
-      //byte = 35;
-      bitSequence = (byte).toString(2) // convert number to a binary string
-      bitSequence = bitSequence.split("").reverse().join("").toString() // reverse data bits - lowest first
-      bitSequence += "00000000".substr(0, 7 - bitSequence.length) // add 0  to make 7 data bits
-      bitSequence += "10000"; //add 5 device bits // alert bitSequence
-      t = audioCtx.currentTime
-      playPulse(startPulseTime)
-      for (bit in bitSequence) {
-        if (bit == "1") {
-          playPulse(logic1PulseTime)
-        } else {
-          playPulse(logic0PulseTime)
-        }
-      }
-
-whiteNoise=()=> {console.log("white noise");
 
 
     }
